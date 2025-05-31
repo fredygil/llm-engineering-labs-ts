@@ -1,4 +1,6 @@
-# Welcome to your Lovable project
+# LLM Engineering Labs - TypeScript Edition
+
+This repository contains TypeScript implementations of the exercises proposed by Ed Donner in the "LLM Engineering: Master AI, Large Language Models & Agents" course (https://www.udemy.com/course/llm-engineering-master-ai-and-large-language-models). The original Python implementations can be found in the [llm_engineering](https://github.com/ed-donner/llm_engineering) repository.
 
 ## Project info
 

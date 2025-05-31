@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
-import { Play, Save, RotateCcw, AlertCircle } from 'lucide-react';
-import { CodeEditor } from '@/components/CodeEditor';
-import { ExecutionResults } from '@/components/ExecutionResults';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import React, { useState } from "react";
+import { Play, Save, RotateCcw, AlertCircle } from "lucide-react";
+import { CodeEditor } from "@/components/CodeEditor";
+import { ExecutionResults } from "@/components/ExecutionResults";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
 interface Exercise {
   title: string;
@@ -22,7 +26,7 @@ export const ExerciseEditor: React.FC<ExerciseEditorProps> = ({
   exercise,
   weekNumber,
   exerciseNumber,
-  apiKey
+  apiKey,
 }) => {
   const [code, setCode] = useState(exercise.initialCode);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -31,7 +35,7 @@ export const ExerciseEditor: React.FC<ExerciseEditorProps> = ({
 
   const handleExecute = async () => {
     if (!apiKey) {
-      setExecutionError('Please set your OpenAI API key first');
+      setExecutionError("Please set your OpenAI API key first");
       return;
     }
 
@@ -41,8 +45,8 @@ export const ExerciseEditor: React.FC<ExerciseEditorProps> = ({
 
     // Simulate code execution
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // Mock successful execution
       const mockResults = `
 Execution completed successfully!
@@ -50,23 +54,24 @@ Execution completed successfully!
 Week ${weekNumber}, Exercise ${exerciseNumber}: ${exercise.title}
 
 Sample output:
-${exercise.category === 'text-generation' ? 
-  '✅ Generated text: "The future of AI is bright and full of possibilities..."' :
-  exercise.category === 'embeddings' ?
-  '✅ Embeddings computed: [0.1234, -0.5678, 0.9012, ...]' :
-  exercise.category === 'fine-tuning' ?
-  '✅ Model fine-tuned successfully with 95% accuracy' :
-  '✅ Code executed successfully'
+${
+  exercise.category === "text-generation"
+    ? '✅ Generated text: "The future of AI is bright and full of possibilities..."'
+    : exercise.category === "embeddings"
+    ? "✅ Embeddings computed: [0.1234, -0.5678, 0.9012, ...]"
+    : exercise.category === "fine-tuning"
+    ? "✅ Model fine-tuned successfully with 95% accuracy"
+    : "✅ Code executed successfully"
 }
 
 API calls made: 1
 Tokens used: 150
 Execution time: 1.2s
       `.trim();
-      
+
       setExecutionResults(mockResults);
     } catch (error) {
-      setExecutionError('An error occurred during execution');
+      setExecutionError("An error occurred during execution");
     } finally {
       setIsExecuting(false);
     }
@@ -80,11 +85,11 @@ Execution time: 1.2s
 
   const handleSave = () => {
     localStorage.setItem(`exercise_${weekNumber}_${exerciseNumber}`, code);
-    console.log('Code saved locally');
+    console.log("Code saved locally");
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="h-[calc(100vh-8rem)] flex flex-col bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="border-b border-gray-200 p-4">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-semibold text-gray-900">
@@ -105,7 +110,9 @@ Execution time: 1.2s
             <div className="flex flex-col h-full">
               <div className="border-b border-gray-200 px-4 py-2 bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">Code Editor</h3>
+                  <h3 className="text-sm font-medium text-gray-700">
+                    Code Editor
+                  </h3>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={handleSave}
@@ -127,12 +134,12 @@ Execution time: 1.2s
                       className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center space-x-1"
                     >
                       <Play className="w-3 h-3" />
-                      <span>{isExecuting ? 'Executing...' : 'Execute'}</span>
+                      <span>{isExecuting ? "Executing..." : "Execute"}</span>
                     </button>
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex-1">
                 <CodeEditor code={code} onChange={setCode} />
               </div>
@@ -146,7 +153,7 @@ Execution time: 1.2s
               <div className="border-b border-gray-200 px-4 py-2 bg-gray-50">
                 <h3 className="text-sm font-medium text-gray-700">Results</h3>
               </div>
-              
+
               <div className="flex-1">
                 <ExecutionResults
                   results={executionResults}

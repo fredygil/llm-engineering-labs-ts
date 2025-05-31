@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Play, Save, RotateCcw, AlertCircle } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
@@ -23,6 +22,15 @@ interface ExerciseEditorProps {
   apiKey: string;
 }
 
+interface ExecutionMetadata {
+  executionTime: number;
+  tokensUsed?: number;
+  weekNumber: number;
+  exerciseNumber: number;
+  exerciseTitle: string;
+  status: 'success' | 'error';
+}
+
 export const ExerciseEditor: React.FC<ExerciseEditorProps> = ({
   exercise,
   weekNumber,
@@ -38,13 +46,17 @@ export const ExerciseEditor: React.FC<ExerciseEditorProps> = ({
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResults, setExecutionResults] = useState<string | null>(null);
   const [executionError, setExecutionError] = useState<string | null>(null);
+  const [executionMetadata, setExecutionMetadata] = useState<ExecutionMetadata | null>(null);
+  const [isSaved, setIsSaved] = useState(() => {
+    const savedCode = localStorage.getItem(storageKey);
+    return savedCode === code;
+  });
 
-  // Auto-save code changes to localStorage
+  // Update saved status when code changes
   useEffect(() => {
-    if (code !== exercise.initialCode) {
-      localStorage.setItem(storageKey, code);
-    }
-  }, [code, storageKey, exercise.initialCode]);
+    const savedCode = localStorage.getItem(storageKey);
+    setIsSaved(savedCode === code);
+  }, [code, storageKey]);
 
   const executeCode = async (userCode: string, openaiApiKey: string) => {
     try {
@@ -154,28 +166,40 @@ export const ExerciseEditor: React.FC<ExerciseEditorProps> = ({
     setIsExecuting(true);
     setExecutionError(null);
     setExecutionResults(null);
+    setExecutionMetadata(null);
 
     try {
       const result = await executeCode(code, apiKey);
       
       if (result.success) {
-        const formattedResults = `
-Execution completed successfully!
-
-Week ${weekNumber}, Exercise ${exerciseNumber}: ${exercise.title}
-
-Output:
-${result.output || 'No output generated'}
-
-Execution time: ${result.execution_time?.toFixed(2) || '1.2'}s
-        `.trim();
-        
-        setExecutionResults(formattedResults);
+        setExecutionResults(result.output || 'No output generated');
+        setExecutionMetadata({
+          executionTime: result.execution_time || 1.2,
+          tokensUsed: result.usage?.total_tokens,
+          weekNumber,
+          exerciseNumber,
+          exerciseTitle: exercise.title,
+          status: 'success'
+        });
       } else {
         setExecutionError(result.error || 'Unknown execution error');
+        setExecutionMetadata({
+          executionTime: 0,
+          weekNumber,
+          exerciseNumber,
+          exerciseTitle: exercise.title,
+          status: 'error'
+        });
       }
     } catch (error: any) {
       setExecutionError(`Execution failed: ${error.message}`);
+      setExecutionMetadata({
+        executionTime: 0,
+        weekNumber,
+        exerciseNumber,
+        exerciseTitle: exercise.title,
+        status: 'error'
+      });
     } finally {
       setIsExecuting(false);
     }
@@ -186,10 +210,13 @@ Execution time: ${result.execution_time?.toFixed(2) || '1.2'}s
     localStorage.removeItem(storageKey);
     setExecutionResults(null);
     setExecutionError(null);
+    setExecutionMetadata(null);
+    setIsSaved(true);
   };
 
   const handleSave = () => {
     localStorage.setItem(storageKey, code);
+    setIsSaved(true);
     console.log("Code saved locally");
   };
 
@@ -204,9 +231,9 @@ Execution time: ${result.execution_time?.toFixed(2) || '1.2'}s
             <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
               {exercise.category}
             </span>
-            {code !== exercise.initialCode && (
+            {!isSaved && (
               <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded">
-                Modified
+                Unsaved Changes
               </span>
             )}
           </div>
@@ -226,10 +253,15 @@ Execution time: ${result.execution_time?.toFixed(2) || '1.2'}s
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={handleSave}
-                      className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors flex items-center space-x-1"
+                      disabled={isSaved}
+                      className={`px-3 py-1 text-xs rounded transition-colors flex items-center space-x-1 ${
+                        isSaved 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                          : 'bg-gray-600 text-white hover:bg-gray-700'
+                      }`}
                     >
                       <Save className="w-3 h-3" />
-                      <span>Save</span>
+                      <span>{isSaved ? 'Saved' : 'Save'}</span>
                     </button>
                     <button
                       onClick={handleReset}
@@ -269,6 +301,7 @@ Execution time: ${result.execution_time?.toFixed(2) || '1.2'}s
                   results={executionResults}
                   error={executionError}
                   isExecuting={isExecuting}
+                  metadata={executionMetadata}
                 />
               </div>
             </div>
